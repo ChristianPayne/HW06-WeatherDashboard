@@ -16,7 +16,8 @@ $()
     function searchForACity(cityName) 
     {
         getFiveDayForecast(cityName);
-        searchInput.value = '';
+        // FIXME: This doesn't clear the input field.
+        searchInput.text('');
     }
 
     function getFiveDayForecast (cityName)
@@ -38,25 +39,39 @@ $()
         $.ajax(settings).done(function (response) 
         {
             var cityReturned = response.city.name;
+
+            // For the 5 day forecast.
             for (let i = 0; i < response.list.length; i++) {
                 
             }
+
+            // Add the city to the history section.
             addCityToHistory(cityReturned);
             console.log(response);
+
+            // Add the city stats to the stats display.
+            $('#city-name-date').text(response.city.name + " (" + response.list[0].dt_txt + ")");
+            var temp = $('<br><p>').text("Temperature: " + kelvinToFahrenheit(response.list[0].main.temp) + " ℉");
+            $("#current-stats").append(temp);
         });
     }
 
     function addCityToHistory (cityName)
     {
+        // Make a new button.
         var currentCity = $('<button type="button" class="list-group-item list-group-item-action">');
+        // Add an on Click event to the history buttons.
         currentCity.click(function() {
             searchForACity(cityName);
         });
+        // Set the text.
         currentCity.text(cityName);
 
+        // Add the current city to the list.
         pastCities.prepend(currentCity);
 
-        if(pastCities.children().length > 3)
+        // Limit there to only be 5 history entries.
+        if(pastCities.children().length > 5)
         {
             pastCities.contents().last().remove();
         }
@@ -71,5 +86,12 @@ $()
     function saveCityIntoHistory ()
     {
         
+    }
+
+    // Helper function to convert Kelvin to Fahrenheit
+    function kelvinToFahrenheit (kelvin)
+    {
+        var f = Math.round(((kelvin-273.15)*1.8)+32);
+        return f;
     }
 };
