@@ -35,19 +35,28 @@ $()
                 "x-rapidapi-key": "ee6b96472fmshd92b732193173abp1c0a9ajsnb454fe423af1"
             }
         };
-
+        
         $.ajax(settings).done(function (response) 
         {
             var cityReturned = response.city.name;
-
+            
+            // TODO: Make sure to get only one result a day.
+            // i + 8
             // For the 5 day forecast.
-            for (let i = 0; i < response.list.length; i++) {
-                
+            for (let i = 4; i < response.list.length; i = i + 8) 
+            {
+                var itr = response.list[i];
+                console.log(itr);
+                // Date
+                console.log(cropDateFromTime(itr.dt_txt));
+                // Temp
+                console.log(kelvinToFahrenheit(itr.temp));
+                // Humidity
             }
 
             // Add the city to the history section.
-            addCityToHistory(cityReturned);
-            console.log(response);
+            // addCityToHistory(cityReturned);
+            // console.log(response);
 
             // Add the city stats to the stats display.
             $('#city-name-date').text(response.city.name + " (" + response.list[0].dt_txt + ")");
@@ -58,6 +67,18 @@ $()
 
     function addCityToHistory (cityName)
     {
+        // TODO: Get the children objects and make sure the new cityName is different than what is in the list.
+        for (let i = 0; i < pastCities.children().length; i++) {
+            if(pastCities.child(i) == cityName)
+            {
+                console.log("Same name. Skipping.");
+                return;
+            }
+            else
+            {
+                console.log(pastCities.child(i));
+            }
+        }
         // Make a new button.
         var currentCity = $('<button type="button" class="list-group-item list-group-item-action">');
         // Add an on Click event to the history buttons.
@@ -93,5 +114,10 @@ $()
     {
         var f = Math.round(((kelvin-273.15)*1.8)+32);
         return f;
+    }
+
+    function cropDateFromTime (fullString)
+    {
+        return fullString.split(" ")[0];
     }
 };
