@@ -16,8 +16,7 @@ $()
     function searchForACity(cityName) 
     {
         getFiveDayForecast(cityName);
-        // FIXME: This doesn't clear the input field.
-        searchInput.text('');
+        searchInput.val('');
     }
 
     function getFiveDayForecast (cityName)
@@ -73,6 +72,7 @@ $()
 
     function addCardsForFiveDayForecast (apiData)
     {
+        $('#forecast-container').empty();
             // For the 5 day forecast.
             for (let i = 4; i < apiData.list.length; i = i + 8) 
             {
@@ -82,14 +82,27 @@ $()
                 // Set up the card.
                 var cardDiv = $('<div>');
                 cardDiv.addClass("card text-white bg-primary mr-3");
-                cardDiv.attr('style', 'max-width: 10rem;');
+                cardDiv.attr('style', 'max-width: 11rem;');
 
                 // Append items to the card.
-                var cardTitleDiv = $("<div>");
-                cardTitleDiv.addClass("card-body");
+                var cardBody = $("<div>");
+                cardBody.addClass("card-body");
 
-                // TODO: Append card to parent.
+                // Set up the header.
+                var cardHeader = $('<h5>');
+                cardHeader.addClass('card-title');
+                cardHeader.text(cropDateFromTime(apiData.list[i].dt_txt));
 
+                // Set up the information.
+                var cardInfo = $('<p>');
+                cardInfo.addClass('card-text');
+                cardInfo.html("Temperature: " + kelvinToFahrenheit(apiData.list[i].main.temp) + " ℉" + "<br>" + "Humidity: " + apiData.list[i].main.humidity + "%");
+
+                // Append card to parent.
+                cardDiv.append(cardBody);
+                cardBody.append(cardHeader);
+                cardBody.append(cardInfo);
+                $('#forecast-container').append(cardDiv);
             }
     }
 
@@ -147,7 +160,7 @@ $()
     // For loading from persistent data/
     function loadCitiesFromHistory ()
     {
-
+        
     }
     // For saving to persistent data.
     function saveCityIntoHistory ()
