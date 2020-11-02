@@ -6,6 +6,8 @@ $()
     var searchInput = $("#search-input");
     var pastCities = $("#past-cities");
 
+    loadCitiesFromHistory();
+
     // On Click Functions
     $("#search-button").on("click", function ()
     {
@@ -49,7 +51,7 @@ $()
     {
         var cityReturned = apiData.city.name;
         // Add the city to the history section.
-        addCityToHistory(cityReturned);
+        addCityToHistoryPanel(cityReturned);
 
         // Add the city stats to the stats display.
         $('#city-name-date').text(apiData.city.name + " (" + cropDateFromTime(apiData.list[0].dt_txt) + ")");
@@ -106,7 +108,7 @@ $()
             }
     }
 
-    function addCityToHistory (cityName)
+    function addCityToHistoryPanel (cityName)
     {
         var repeatName = false;
         var repeatedElement;
@@ -149,6 +151,9 @@ $()
             {
                 pastCities.contents().last().remove();
             }
+
+            saveCityIntoHistory(cityName);
+
         }
         else
         {
@@ -157,15 +162,48 @@ $()
         }
     }
 
-    // For loading from persistent data/
     function loadCitiesFromHistory ()
     {
-        
+        var pastCitiesArray = loadCitiesFromStorage();
+        if(pastCitiesArray)
+        {
+            pastCitiesArray.forEach((item, index)=>
+            {
+                addCityToHistoryPanel(item);
+            });
+        }
+    }
+
+    // For loading from persistent data/
+    function loadCitiesFromStorage ()
+    {
+        var loadedString = localStorage.getItem('pastSearches');
+        if(loadedString)
+        {
+            var cityArray = loadedString.split(',');
+            return cityArray;
+        }
+        else
+        {
+            return;
+        }
     }
     // For saving to persistent data.
-    function saveCityIntoHistory ()
-    {
+    function saveCityIntoHistory (cityName)
+    { 
+        var cityArray = loadCitiesFromStorage();
         
+        if(cityArray != null)
+        {
+            if(!cityArray.includes(cityName))
+            {
+                localStorage.setItem('pastSearches', cityArray  + "," + cityName);
+            }
+        }
+        else
+        {
+            localStorage.setItem('pastSearches', cityName);
+        }
     }
 
     // Helper function to convert Kelvin to Fahrenheit
