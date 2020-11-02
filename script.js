@@ -38,63 +38,109 @@ $()
         
         $.ajax(settings).done(function (response) 
         {
-            var cityReturned = response.city.name;
-            
-            // TODO: Make sure to get only one result a day.
-            // i + 8
-            // For the 5 day forecast.
-            for (let i = 4; i < response.list.length; i = i + 8) 
-            {
-                var itr = response.list[i];
-                console.log(itr);
-                // Date
-                console.log(cropDateFromTime(itr.dt_txt));
-                // Temp
-                console.log(kelvinToFahrenheit(itr.temp));
-                // Humidity
-            }
+            // Add the cards for the 5-day.
+            addCardsForFiveDayForecast(response);
 
-            // Add the city to the history section.
-            // addCityToHistory(cityReturned);
-            // console.log(response);
-
-            // Add the city stats to the stats display.
-            $('#city-name-date').text(response.city.name + " (" + response.list[0].dt_txt + ")");
-            var temp = $('<br><p>').text("Temperature: " + kelvinToFahrenheit(response.list[0].main.temp) + " ℉");
-            $("#current-stats").append(temp);
+            // Add stats for today.
+            addStatsToTodaysForecast(response);
         });
+    }
+
+    function addStatsToTodaysForecast (apiData)
+    {
+        var cityReturned = apiData.city.name;
+        // Add the city to the history section.
+        addCityToHistory(cityReturned);
+
+        // Add the city stats to the stats display.
+        $('#city-name-date').text(apiData.city.name + " (" + cropDateFromTime(apiData.list[0].dt_txt) + ")");
+
+        // Clear the current div.
+        $('#current-stats').empty();
+        
+        // Add in all the new stats.
+        var temp = $('<p>').text("Temperature: " + kelvinToFahrenheit(apiData.list[0].main.temp) + " ℉");
+        var hum = $('<p>').text("Humidity: " + apiData.list[0].main.humidity + "%");
+        var wind = $('<p>').text("Wind Speed: " + apiData.list[0].wind.speed + "mph");
+        var uv = $('<p>').text("UV Index: " + apiData.list[0].weather[0].id / 100);
+
+        // Append all the stats to the parent.
+        $("#current-stats").append(temp);
+        $("#current-stats").append(hum);
+        $("#current-stats").append(wind);
+        $("#current-stats").append(uv);
+    }
+
+    function addCardsForFiveDayForecast (apiData)
+    {
+            // For the 5 day forecast.
+            for (let i = 4; i < apiData.list.length; i = i + 8) 
+            {
+                // Save the iteration in a var.
+                var itr = apiData.list[i];
+
+                // Set up the card.
+                var cardDiv = $('<div>');
+                cardDiv.addClass("card text-white bg-primary mr-3");
+                cardDiv.attr('style', 'max-width: 10rem;');
+
+                // Append items to the card.
+                var cardTitleDiv = $("<div>");
+                cardTitleDiv.addClass("card-body");
+
+                // TODO: Append card to parent.
+
+            }
     }
 
     function addCityToHistory (cityName)
     {
-        // TODO: Get the children objects and make sure the new cityName is different than what is in the list.
-        for (let i = 0; i < pastCities.children().length; i++) {
-            if(pastCities.child(i) == cityName)
+        var repeatName = false;
+        var repeatedElement;
+
+        pastCities.children().each( (index, element) => 
+        {
+            // Compare the current element to the new city we are calling.
+            if($(element).text() == cityName)
             {
-                console.log("Same name. Skipping.");
-                return;
+                // Flag that we have found a repeat name.
+                repeatName = true;
+
+                // Store the element in a var for later use.
+                repeatedElement = $(element);
+
+                // Remove it from the list.
+                $(element).remove();
             }
-            else
+        });
+
+        if(!repeatName)
+        {
+            // Make a new button.
+            var currentCity = $('<button type="button" class="list-group-item list-group-item-action">');
+
+            // Add an on Click event to the history buttons.
+            currentCity.click(function() 
             {
-                console.log(pastCities.child(i));
+                searchForACity(cityName);
+            });
+
+            // Set the text.
+            currentCity.text(cityName);
+
+            // Add the current city to the list.
+            pastCities.prepend(currentCity);
+
+            // Limit there to only be 5 history entries.
+            if(pastCities.children().length > 5)
+            {
+                pastCities.contents().last().remove();
             }
         }
-        // Make a new button.
-        var currentCity = $('<button type="button" class="list-group-item list-group-item-action">');
-        // Add an on Click event to the history buttons.
-        currentCity.click(function() {
-            searchForACity(cityName);
-        });
-        // Set the text.
-        currentCity.text(cityName);
-
-        // Add the current city to the list.
-        pastCities.prepend(currentCity);
-
-        // Limit there to only be 5 history entries.
-        if(pastCities.children().length > 5)
+        else
         {
-            pastCities.contents().last().remove();
+            // Move the name to the top of the list.
+            pastCities.prepend(repeatedElement);
         }
     }
 
@@ -116,6 +162,7 @@ $()
         return f;
     }
 
+    // Helper function to cut the time off of the api date return.
     function cropDateFromTime (fullString)
     {
         return fullString.split(" ")[0];
